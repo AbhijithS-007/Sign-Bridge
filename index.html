@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>SignBridge — Learn &amp; Translate Sign Language | ASL Recognition</title>
+  <meta name="description" content="SignBridge is a real-time ASL sign language translator powered by AI. Learn, practice, and communicate using American Sign Language right in your browser."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script type="module">
+    import { FilesetResolver, HandLandmarker }
+      from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/vision_bundle.mjs";
+    window._mpImport = { FilesetResolver, HandLandmarker };
+  </script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ══════════ FLOATING NAV (Dynamic Island) ══════════ -->
+<nav class="floating-nav" id="floating-nav">
+  <div class="nav-island">
+    <button class="nav-pill active" data-section="hero" id="nav-hero">
+      <span class="nav-dot"></span>
+      <span class="nav-label">SignBridge</span>
+    </button>
+    <button class="nav-pill" data-section="translator" id="nav-translator">
+      <span class="nav-dot"></span>
+      <span class="nav-label">Translator</span>
+    </button>
+    <button class="nav-pill" data-section="tutorial" id="nav-tutorial">
+      <span class="nav-dot"></span>
+      <span class="nav-label">Learn ASL</span>
+    </button>
+    <button class="nav-pill" data-section="about" id="nav-about">
+      <span class="nav-dot"></span>
+      <span class="nav-label">About</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════ SECTION 1: HERO ══════════ -->
+<section class="scroll-section hero-section" id="hero" data-bg="assets/images/hero-bg.png">
+  <div class="section-bg" id="hero-bg"></div>
+  <div class="section-overlay"></div>
+  <div class="section-content hero-content">
+    <img src="assets/images/logo.png" alt="SignBridge Logo" class="hero-logo"/>
+    <div class="hero-brand">SignBridge</div>
+    <div class="hero-badge">Powered by AI &bull; American Sign Language</div>
+    <h1 class="hero-title">
+      <span class="title-line">Every hand tells</span>
+      <span class="title-line accent">a story.</span>
+    </h1>
+    <p class="hero-subtitle">
+      SignBridge bridges the gap between the hearing and the deaf community. 
+      Real-time ASL recognition that learns, translates, and empowers — 
+      all from your browser.
+    </p>
+    <div class="hero-cta">
+      <button class="cta-btn primary" onclick="document.getElementById('translator').scrollIntoView({behavior:'smooth'})">
+        <span>Start Translating</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+      </button>
+      <button class="cta-btn ghost" onclick="document.getElementById('tutorial').scrollIntoView({behavior:'smooth'})">
+        Learn the Signs
+      </button>
+    </div>
+    <div class="scroll-indicator">
+      <div class="scroll-mouse">
+        <div class="scroll-wheel"></div>
+      </div>
+      <span>Scroll to explore</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 2: TRANSLATOR ══════════ -->
+<section class="scroll-section translator-section" id="translator" data-bg="assets/images/translator-bg.png">
+  <div class="section-bg" id="translator-bg"></div>
+  <div class="section-overlay dark"></div>
+  <div class="section-content translator-content">
+
+    <div class="section-header">
+      <span class="section-tag">Real-Time Recognition</span>
+      <h2 class="section-title">The <em>Translator</em></h2>
+      <p class="section-desc">Show your hand to the camera and watch as AI recognizes ASL letters and numbers in real-time. Press <kbd>M</kbd> to toggle modes.</p>
+    </div>
+
+    <!-- Translator App (retaining all original functionality) -->
+    <div class="translator-app glass-card">
+
+      <div class="app-top-bar">
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="btn-mode-alpha" role="tab" aria-selected="true">A–Z Letters</button>
+          <button class="mode-btn" id="btn-mode-digits" role="tab" aria-selected="false">0–9 Numbers</button>
+        </div>
+        <div class="app-status">
+          <span class="status-dot loading" id="status-dot"></span>
+          <span id="status-text">Initializing…</span>
+        </div>
+      </div>
+
+      <div class="app-body">
+        <!-- Camera Column -->
+        <div class="camera-col">
+          <div class="camera-card">
+            <div class="camera-toolbar">
+              <span class="cam-label">Live Feed</span>
+              <div class="cam-btns">
+                <button class="icon-btn" id="btn-flip" title="Flip camera" aria-label="Flip camera">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+                </button>
+                <button class="icon-btn" id="btn-camera" title="Toggle camera" aria-label="Toggle camera">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7L16 12l7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="video-wrapper">
+              <video id="webcam" playsinline autoplay muted></video>
+              <canvas id="overlay-canvas"></canvas>
+              <div class="video-overlay-ui">
+                <div class="scan-line"></div>
+                <div class="corner tl"></div><div class="corner tr"></div>
+                <div class="corner bl"></div><div class="corner br"></div>
+              </div>
+              <div class="camera-placeholder" id="camera-placeholder">
+                <div class="placeholder-icon">
+                  <svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="28" stroke="rgba(180,170,140,.4)" stroke-width="2" stroke-dasharray="8 4"/><path d="M20 44C20 32 26 24 30 16C34 24 40 32 40 44" stroke="rgba(180,170,140,.5)" stroke-width="2.5" stroke-linecap="round"/></svg>
+                </div>
+                <p>Camera starting…</p>
+              </div>
+            </div>
+            <div class="live-bar">
+              <div class="live-badge"><span class="live-dot"></span>LIVE</div>
+              <div class="pred-badge"><span id="pred-letter">—</span></div>
+              <div class="conf-wrap">
+                <div class="conf-track"><div class="conf-fill" id="conf-fill" style="width:0%"></div></div>
+                <span class="conf-pct" id="conf-pct">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mode-info glass-card-sm">
+            <div class="mode-icon">✦</div>
+            <div>
+              <div class="mode-name" id="mode-name">Alphabet A–Z Mode</div>
+              <div class="mode-desc" id="mode-desc">Single frame → MLP → Letter classification</div>
+            </div>
+            <div class="mode-badge" id="mode-badge">MLP</div>
+          </div>
+        </div>
+
+        <!-- Output Column -->
+        <div class="output-col">
+          <div class="output-card glass-card-sm" id="alpha-output">
+            <div class="output-header">
+              <h3>Recognition Output</h3>
+              <button class="sm-btn danger" id="btn-reset-alpha">Clear</button>
+            </div>
+
+            <div class="cooldown-section">
+              <div class="cooldown-head"><span>Hold Progress</span><span id="cooldown-count">Ready</span></div>
+              <div class="cooldown-track"><div class="cooldown-fill" id="cooldown-fill" style="width:0%"></div></div>
+            </div>
+
+            <div class="grid-section">
+              <div class="grid-label" id="grid-label">ASL Alphabet Reference</div>
+              <div class="letter-grid" id="letter-grid"></div>
+            </div>
+
+            <div class="buffer-section">
+              <div class="buffer-label">Output Buffer</div>
+              <div class="letter-buffer" id="letter-buffer" role="log" aria-live="polite">
+                <span class="letter-placeholder" id="letter-placeholder">Detected signs appear here…</span>
+                <div class="letter-chars" id="letter-chars"></div>
+              </div>
+              <div class="buffer-actions">
+                <button class="sm-btn" id="btn-backspace-alpha">⌫ Backspace</button>
+                <button class="sm-btn" id="btn-space-alpha">Space</button>
+                <button class="sm-btn accent" id="btn-commit-word">✓ Done</button>
+              </div>
+            </div>
+
+            <div class="sentence-section">
+              <div class="sentence-label">Formed Text</div>
+              <div class="sentence-box" id="alpha-sentence-box" role="log" aria-live="polite">
+                <span class="sentence-placeholder" id="alpha-sentence-placeholder">Committed words appear here…</span>
+                <div class="sentence-tokens" id="alpha-sentence-tokens"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat glass-card-sm"><div class="stat-val" id="stat-fps-val">—</div><div class="stat-lbl">FPS</div></div>
+            <div class="stat glass-card-sm"><div class="stat-val" id="stat-hands-val">0</div><div class="stat-lbl">Hands</div></div>
+            <div class="stat glass-card-sm"><div class="stat-val" id="stat-conf-val">—</div><div class="stat-lbl">Confidence</div></div>
+            <div class="stat glass-card-sm"><div class="stat-val" id="stat-total-val">0</div><div class="stat-lbl">Recognized</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 3: TUTORIAL ══════════ -->
+<section class="scroll-section tutorial-section" id="tutorial" data-bg="assets/images/tutorial-bg.png">
+  <div class="section-bg" id="tutorial-bg"></div>
+  <div class="section-overlay light"></div>
+  <div class="section-content tutorial-content">
+    <div class="section-header dark-text">
+      <span class="section-tag">Sign Language Guide</span>
+      <h2 class="section-title">Learn the <em>Signs</em></h2>
+      <p class="section-desc">Master the American Sign Language alphabet and numbers. Each sign is a gateway to communication.</p>
+    </div>
+
+    <div class="tutorial-cards">
+      <div class="tutorial-card glass-card" data-reveal>
+        <div class="card-number">01</div>
+        <h3>The Alphabet</h3>
+        <p>26 hand shapes represent each letter of the English alphabet. These are the building blocks of ASL fingerspelling.</p>
+        <img src="assets/images/asl-alphabet.png" alt="ASL Alphabet Chart A-Z" class="tutorial-img" loading="lazy"/>
+        <div class="card-tip">💡 Start with your dominant hand. Keep your palm facing the viewer.</div>
+      </div>
+
+      <div class="tutorial-card glass-card" data-reveal>
+        <div class="card-number">02</div>
+        <h3>The Numbers</h3>
+        <p>Numbers 0-9 each have a distinct hand shape. Fun fact: ASL "0" is the same as the letter "O"!</p>
+        <img src="assets/images/asl-numbers.png" alt="ASL Numbers Chart 0-9" class="tutorial-img" loading="lazy"/>
+        <div class="card-tip">💡 Numbers 1-5 are simply the count of fingers held up.</div>
+      </div>
+
+      <div class="tutorial-card glass-card" data-reveal>
+        <div class="card-number">03</div>
+        <h3>Tips for Accuracy</h3>
+        <ul class="tip-list">
+          <li>Use a well-lit environment with a plain background</li>
+          <li>Keep your hand centered in the camera frame</li>
+          <li>Hold each sign steady for 1 second until the bar fills</li>
+          <li>Use <kbd>Space</kbd> for spaces, <kbd>Backspace</kbd> to delete</li>
+          <li>Press <kbd>M</kbd> to switch between Letters and Numbers</li>
+          <li>Click "✓ Done" to commit a word to your sentence</li>
+        </ul>
+        <div class="card-tip">💡 Practice each letter slowly before speeding up.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 4: ABOUT ══════════ -->
+<section class="scroll-section about-section" id="about" data-bg="assets/images/about-bg.png">
+  <div class="section-bg" id="about-bg"></div>
+  <div class="section-overlay dark"></div>
+  <div class="section-content about-content">
+    <div class="section-header">
+      <span class="section-tag">Our Mission</span>
+      <h2 class="section-title">About <em>SignBridge</em></h2>
+    </div>
+
+    <div class="about-grid">
+      <div class="about-text">
+        <blockquote class="about-quote">
+          "Communication is a human right. <br/>Technology should make it <em>accessible to everyone</em>."
+        </blockquote>
+
+        <p>SignBridge was created with a single purpose: to make sign language accessible, 
+        learnable, and usable by anyone with a web browser. No downloads. No installations. 
+        Just open and sign.</p>
+
+        <p>We believe learning should be <strong>fun, interactive, and empowering</strong>. 
+        SignBridge turns sign language education into an engaging experience — learn at your own 
+        pace, practice with real-time AI feedback, and build confidence one sign at a time. 
+        Whether you're a student, educator, or simply curious, this platform makes ASL accessible 
+        to everyone in their own way.</p>
+
+        <p>Built on <strong>American Sign Language (ASL)</strong>, the most widely used sign language 
+        in North America, SignBridge uses cutting-edge AI to recognize hand shapes in real-time 
+        through your webcam.</p>
+
+        <p>Over <strong>500,000 people</strong> in the United States are functionally deaf, and 
+        millions more worldwide rely on sign language as their primary means of communication. 
+        By lowering the barrier to learning ASL, we hope to foster a more inclusive world where 
+        communication knows no boundaries.</p>
+      </div>
+
+      <div class="about-features">
+        <div class="feature-card glass-card-sm" data-reveal>
+          <div class="feature-icon">🧠</div>
+          <h4>AI-Powered</h4>
+          <p>MediaPipe hand tracking + TensorFlow.js neural networks running entirely in your browser.</p>
+        </div>
+        <div class="feature-card glass-card-sm" data-reveal>
+          <div class="feature-icon">⚡</div>
+          <h4>Real-Time</h4>
+          <p>30fps inference speed. No server calls — all processing happens locally on your device.</p>
+        </div>
+        <div class="feature-card glass-card-sm" data-reveal>
+          <div class="feature-icon">🌍</div>
+          <h4>Accessible</h4>
+          <p>Works on any modern browser. Free, open-source, and designed for the specially-abled community.</p>
+        </div>
+        <div class="feature-card glass-card-sm" data-reveal>
+          <div class="feature-icon">🔒</div>
+          <h4>Private</h4>
+          <p>Your webcam feed never leaves your device. Zero data collection. Complete privacy.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-brand">SignBridge</div>
+      <p>Made with purpose. Built with ❤ for the deaf community.</p>
+      <p class="footer-tech">MediaPipe &bull; TensorFlow.js &bull; ASL &bull; 2026</p>
+    </footer>
+  </div>
+</section>
+
+<!-- ══════════ LOADER OVERLAY ══════════ -->
+<div class="loader-overlay" id="loader-overlay" role="status" aria-live="polite">
+  <div class="loader-card glass-card">
+    <img src="assets/images/logo.png" alt="SignBridge" class="loader-logo-img"/>
+    <h2 class="loader-title">SignBridge</h2>
+    <p class="loader-sub">Loading AI models…</p>
+    <div class="loader-steps">
+      <div class="loader-step"><div class="step-dot loading" id="dot-mp"></div><span>MediaPipe Hand Landmarker</span></div>
+      <div class="loader-step"><div class="step-dot pending" id="dot-alpha"></div><span>Alphabet Model (MLP)</span></div>
+      <div class="loader-step"><div class="step-dot pending" id="dot-digits"></div><span>Numbers Model (MLP)</span></div>
+      <div class="loader-step"><div class="step-dot pending" id="dot-cam"></div><span>Camera Access</span></div>
+    </div>
+    <div class="loader-track"><div class="loader-fill" id="loader-fill" style="width:0%"></div></div>
+    <p class="loader-note">Models in <code>models/alpha_model/</code> and <code>models/numbers_model/</code></p>
+  </div>
+</div>
+
+<!-- ══════════ NO-MODEL MODAL ══════════ -->
+<div class="modal-overlay hidden" id="modal-no-model" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-card glass-card">
+    <div class="modal-icon">⚠</div>
+    <h3 id="modal-title" class="modal-heading">Models Not Found</h3>
+    <p class="modal-body">One or more model files are missing. Running in <strong>demo mode</strong>.</p>
+    <div class="modal-paths">
+      <code>models/alpha_model/model.json</code>
+      <code>models/numbers_model/model.json</code>
+    </div>
+    <p class="modal-body">Train via Colab notebooks in <code>notebooks/</code></p>
+    <button class="cta-btn primary modal-close" id="btn-modal-close">Continue in Demo Mode</button>
+  </div>
+</div>
+
+<script src="script.js" type="module"></script>
+<script src="app.js" defer></script>
+</body>
+</html>
