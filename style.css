@@ -33,6 +33,7 @@ kbd{font-family:var(--font-mono);font-size:.75em;background:var(--surface);borde
 
 /* ══════════ SCROLL SECTIONS ══════════ */
 .scroll-section{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;scroll-snap-align:start}
+.tutorial-section{overflow:visible!important}
 .section-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.35;transition:opacity 1s}
 .section-overlay{position:absolute;inset:0;pointer-events:none}
 .section-overlay.dark{background:linear-gradient(180deg,rgba(14,15,13,.7) 0%,rgba(14,15,13,.85) 100%)}
@@ -176,11 +177,11 @@ kbd{font-family:var(--font-mono);font-size:.75em;background:var(--surface);borde
 .signs-tab:hover:not(.active){background:rgba(90,107,60,.15)}
 
 /* Sign panels */
-.signs-panel{display:block}
+.signs-panel{display:block;overflow:visible}
 .signs-panel.hidden{display:none}
 
 /* ── Individual sign cards ── */
-.signs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin-bottom:20px}
+.signs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin-bottom:20px;overflow:visible;padding:24px 12px}
 
 .sign-card{
   position:relative;
