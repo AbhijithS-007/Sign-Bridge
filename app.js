@@ -82,6 +82,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const DIGITS  = '0123456789'.split('');
 
+  // Create shared tooltip element
+  const tooltip = document.createElement('div');
+  tooltip.className = 'sign-tooltip';
+  tooltip.innerHTML = `<div class="sign-tooltip-inner">
+    <img id="tt-img" src="" alt=""/>
+    <div class="sign-tooltip-label" id="tt-label"></div>
+  </div>`;
+  document.body.appendChild(tooltip);
+
+  const ttImg   = tooltip.querySelector('#tt-img');
+  const ttLabel = tooltip.querySelector('#tt-label');
+  let hideTimer = null;
+
+  function positionTooltip(cardEl) {
+    const r = cardEl.getBoundingClientRect();
+    const tw = 180, th = 210; // tooltip approx size
+    let left = r.left + r.width / 2 - tw / 2;
+    let top  = r.top - th - 10;          // prefer above
+    if (top < 8) top = r.bottom + 10;    // flip below if no room
+    left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+    tooltip.style.left = left + 'px';
+    tooltip.style.top  = top  + 'px';
+  }
+
   function buildGrid(containerId, signs) {
     const grid = document.getElementById(containerId);
     if (!grid) return;
@@ -92,34 +116,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const src = `assets/images/signs/${sign.toLowerCase()}.jpg`;
 
-      // Actual image embedded in card (revealed on hover via CSS)
-      const img = document.createElement('img');
-      img.className = 'sign-img';
-      img.alt = `ASL ${sign}`;
-      img.loading = 'lazy';
-      img.src = src;
-      img.onerror = () => card.classList.add('no-image');
+      // Pre-load image to know if it exists
+      const preload = new Image();
+      preload.onload  = () => card.classList.remove('no-image');
+      preload.onerror = () => card.classList.add('no-image');
+      preload.src = src;
 
-      // Letter label — centered normally, slides to bottom on hover
+      // Letter label only — centered, large
       const label = document.createElement('div');
       label.className = 'sign-label';
       label.textContent = sign;
-
-      card.appendChild(img);
       card.appendChild(label);
 
-      // Nudge adjacent cards on hover
+      // Hover: show tooltip popup
       card.addEventListener('mouseenter', () => {
-        const prev = card.previousElementSibling;
-        const next = card.nextElementSibling;
-        if (prev) { prev.classList.remove('nudge-right'); prev.classList.add('nudge-left'); }
-        if (next) { next.classList.remove('nudge-left');  next.classList.add('nudge-right'); }
+        clearTimeout(hideTimer);
+        ttImg.src   = src;
+        ttLabel.textContent = sign;
+        positionTooltip(card);
+        tooltip.classList.add('visible');
       });
       card.addEventListener('mouseleave', () => {
-        const prev = card.previousElementSibling;
-        const next = card.nextElementSibling;
-        if (prev) prev.classList.remove('nudge-left','nudge-right');
-        if (next) next.classList.remove('nudge-left','nudge-right');
+        hideTimer = setTimeout(() => tooltip.classList.remove('visible'), 80);
       });
 
       grid.appendChild(card);
