@@ -13,9 +13,9 @@ node_modules/
 # Notebooks (optional — keep if you want training code public)
 # notebooks/
 
-# Large binary model weights (too big for GitHub's 100MB limit)
-models/alpha_model/group1-shard*.bin
-models/numbers_model/group1-shard*.bin
+# Large binary model weights — now tracked via Git LFS
+# models/alpha_model/group1-shard*.bin
+# models/numbers_model/group1-shard*.bin
 
 # Keep model.json and metadata.json (needed for the app to run)
 
