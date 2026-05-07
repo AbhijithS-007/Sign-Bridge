@@ -131,13 +131,13 @@ async function loadAll() {
   setStep("cam", "done");
   setProgress(100);
 
-  // Dismiss loader after short delay
+  // Dismiss loader after 0.75s delay (let aura animation be visible)
   setTimeout(() => {
     loaderOverlay.style.opacity = "0";
     loaderOverlay.style.transition = "opacity .5s";
     setTimeout(() => loaderOverlay.classList.add("hidden"), 500);
     updateStatusReady();
-  }, 800);
+  }, 750);
 }
 
 function waitForMP() {
@@ -157,13 +157,35 @@ function setStep(id, state) {
 
 function setProgress(pct) {
   $("loader-fill").style.width = pct + "%";
+
   // Drive SVG circular ring
   const CIRC = 427.3;
   const offset = CIRC - (pct / 100) * CIRC;
   const ring = $("ring-fill"), glow = $("ring-glow"), pctEl = $("loader-pct");
+  const sparkle = $("ring-sparkle"), aura = $("ring-aura");
+
   if (ring)  ring.style.strokeDashoffset  = offset;
   if (glow)  glow.style.strokeDashoffset  = offset;
   if (pctEl) pctEl.textContent = Math.round(pct) + "%";
+
+  // Move sparkle dot to leading edge of arc
+  if (sparkle) {
+    if (pct > 0 && pct < 100) {
+      sparkle.classList.add('active');
+      const angle = (pct / 100) * 2 * Math.PI - Math.PI / 2; // starts at top
+      const cx = 80 + 68 * Math.cos(angle);
+      const cy = 80 + 68 * Math.sin(angle);
+      sparkle.setAttribute('cx', cx);
+      sparkle.setAttribute('cy', cy);
+    } else if (pct >= 100) {
+      sparkle.classList.remove('active');
+    }
+  }
+
+  // Aura appears when fully loaded
+  if (aura && pct >= 100) {
+    aura.classList.add('active');
+  }
 }
 
 function showModal() {
