@@ -168,16 +168,42 @@ kbd{font-family:var(--font-mono);font-size:.75em;background:var(--surface);borde
 #tutorial-bg{background-image:url('assets/images/tutorial-bg.png')}
 .tutorial-section{align-items:flex-start}
 .tutorial-content{padding-top:120px}
-.tutorial-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px}
-.tutorial-card{padding:32px;position:relative;overflow:hidden}
-.tutorial-card .card-number{font-family:var(--font-display);font-size:3rem;font-weight:800;color:rgba(138,154,91,.15);position:absolute;top:16px;right:24px;line-height:1}
-.tutorial-card h3{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--cream);margin-bottom:10px}
-.tutorial-card p{font-size:.88rem;color:var(--text2);line-height:1.7;margin-bottom:16px}
-.tutorial-img{width:100%;max-height:600px;object-fit:contain;border-radius:var(--radius-sm);border:1px solid var(--glass-border);margin-bottom:12px;background:rgba(255,255,255,.05)}
-.card-tip{font-size:.78rem;color:var(--amber);background:rgba(212,168,83,.06);border:1px solid rgba(212,168,83,.12);border-radius:var(--radius-sm);padding:10px 14px}
-.tip-list{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
-.tip-list li{font-size:.88rem;color:var(--text2);padding-left:20px;position:relative}
-.tip-list li::before{content:'→';position:absolute;left:0;color:var(--olive)}
+
+/* Tabs */
+.signs-tabs{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.signs-tab{padding:10px 28px;border-radius:50px;border:1px solid rgba(90,107,60,.3);background:rgba(90,107,60,.08);color:#5a6b3c;font-family:var(--font-body);font-size:.85rem;font-weight:600;cursor:pointer;transition:var(--transition)}
+.signs-tab.active{background:var(--forest);color:#fff;border-color:transparent;box-shadow:0 4px 16px rgba(90,107,60,.3)}
+.signs-tab:hover:not(.active){background:rgba(90,107,60,.15)}
+
+/* Sign panels */
+.signs-panel{display:block}
+.signs-panel.hidden{display:none}
+
+/* Individual sign grid */
+.signs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;margin-bottom:20px}
+.sign-card{background:rgba(255,255,255,.85);border:1px solid rgba(90,107,60,.15);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:var(--transition);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.sign-card:hover{transform:translateY(-4px) scale(1.04);box-shadow:0 8px 24px rgba(90,107,60,.25);border-color:var(--forest)}
+.sign-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.sign-card .sign-placeholder{width:100%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(90,107,60,.06);color:#8a9a6a;gap:4px}
+.sign-card .sign-placeholder svg{opacity:.4}
+.sign-card .sign-placeholder span{font-size:.6rem;opacity:.6}
+.sign-label{text-align:center;padding:8px 4px;font-family:var(--font-mono);font-size:.85rem;font-weight:700;color:#3a4a28;background:rgba(90,107,60,.08);border-top:1px solid rgba(90,107,60,.1)}
+
+/* Tips card */
+.tips-card{padding:36px;max-width:600px}
+.tips-card .card-number{font-family:var(--font-display);font-size:3rem;font-weight:800;color:rgba(138,154,91,.2);margin-bottom:8px}
+.tips-card h3{font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--cream);margin-bottom:16px}
+
+/* Dark tip variant for light backgrounds */
+.card-tip.dark{font-size:.82rem;color:#4a5a2a;background:rgba(90,107,60,.1);border:1px solid rgba(90,107,60,.2);border-radius:var(--radius-sm);padding:12px 16px;margin-top:4px}
+
+/* Lightbox */
+.sign-lightbox{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center}
+.sign-lightbox.hidden{display:none}
+.lightbox-inner{position:relative;text-align:center;max-width:min(480px,90vw)}
+.lightbox-inner img{width:100%;border-radius:var(--radius-lg);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.lightbox-label{font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--cream);margin-top:16px;letter-spacing:2px}
+.lightbox-close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 /* ══════════ ABOUT ══════════ */
 #about-bg{background-image:url('assets/images/about-bg.png')}

@@ -214,24 +214,38 @@
       <p class="section-desc">Master the American Sign Language alphabet and numbers. Each sign is a gateway to communication.</p>
     </div>
 
-    <div class="tutorial-cards">
-      <div class="tutorial-card glass-card" data-reveal>
-        <div class="card-number">01</div>
-        <h3>The Alphabet</h3>
-        <p>26 hand shapes represent each letter of the English alphabet. These are the building blocks of ASL fingerspelling.</p>
-        <img src="assets/images/asl-alphabet.png" alt="ASL Alphabet Chart A-Z" class="tutorial-img" loading="lazy"/>
-        <div class="card-tip">💡 Start with your dominant hand. Keep your palm facing the viewer.</div>
-      </div>
+<section class="scroll-section tutorial-section" id="tutorial" data-bg="assets/images/tutorial-bg.png">
+  <div class="section-bg" id="tutorial-bg"></div>
+  <div class="section-overlay light"></div>
+  <div class="section-content tutorial-content">
+    <div class="section-header dark-text">
+      <span class="section-tag">Sign Language Guide</span>
+      <h2 class="section-title">Learn the <em>Signs</em></h2>
+      <p class="section-desc">Master the American Sign Language alphabet and numbers. Tap any sign to enlarge it.</p>
+    </div>
 
-      <div class="tutorial-card glass-card" data-reveal>
-        <div class="card-number">02</div>
-        <h3>The Numbers</h3>
-        <p>Numbers 0-9 each have a distinct hand shape. Fun fact: ASL "0" is the same as the letter "O"!</p>
-        <img src="assets/images/asl-numbers.png" alt="ASL Numbers Chart 0-9" class="tutorial-img" loading="lazy"/>
-        <div class="card-tip">💡 Numbers 1-5 are simply the count of fingers held up.</div>
-      </div>
+    <!-- Tab switcher -->
+    <div class="signs-tabs">
+      <button class="signs-tab active" id="tab-letters" onclick="switchSignTab('letters')">A&ndash;Z Alphabet</button>
+      <button class="signs-tab" id="tab-numbers" onclick="switchSignTab('numbers')">0&ndash;9 Numbers</button>
+      <button class="signs-tab" id="tab-tips" onclick="switchSignTab('tips')">Tips</button>
+    </div>
 
-      <div class="tutorial-card glass-card" data-reveal>
+    <!-- Letters Grid -->
+    <div class="signs-panel" id="panel-letters">
+      <div class="signs-grid" id="letters-grid"></div>
+      <div class="card-tip dark">&#128161; Start with your dominant hand. Keep your palm facing the viewer.</div>
+    </div>
+
+    <!-- Numbers Grid -->
+    <div class="signs-panel hidden" id="panel-numbers">
+      <div class="signs-grid" id="numbers-grid"></div>
+      <div class="card-tip dark">&#128161; ASL "0" is the same hand shape as the letter "O".</div>
+    </div>
+
+    <!-- Tips Panel -->
+    <div class="signs-panel hidden" id="panel-tips">
+      <div class="tips-card glass-card">
         <div class="card-number">03</div>
         <h3>Tips for Accuracy</h3>
         <ul class="tip-list">
@@ -240,13 +254,22 @@
           <li>Hold each sign steady for 1 second until the bar fills</li>
           <li>Use <kbd>Space</kbd> for spaces, <kbd>Backspace</kbd> to delete</li>
           <li>Press <kbd>M</kbd> to switch between Letters and Numbers</li>
-          <li>Click "✓ Done" to commit a word to your sentence</li>
+          <li>Click "&#10003; Done" to commit a word to your sentence</li>
         </ul>
-        <div class="card-tip">💡 Practice each letter slowly before speeding up.</div>
+        <div class="card-tip">&#128161; Practice each letter slowly before speeding up for best results.</div>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Sign lightbox -->
+<div class="sign-lightbox hidden" id="sign-lightbox" onclick="closeLightbox()">
+  <div class="lightbox-inner" onclick="event.stopPropagation()">
+    <img id="lightbox-img" src="" alt=""/>
+    <div class="lightbox-label" id="lightbox-label"></div>
+    <button class="lightbox-close" onclick="closeLightbox()">&#10005;</button>
+  </div>
+</div>
 
 <!-- ══════════ SECTION 4: ABOUT ══════════ -->
 <section class="scroll-section about-section" id="about" data-bg="assets/images/about-bg.png">
