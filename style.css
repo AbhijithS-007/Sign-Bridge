@@ -47,6 +47,52 @@ kbd{font-family:var(--font-mono);font-size:.75em;background:var(--surface);borde
 .dark-text .section-desc{color:var(--text3)}
 .dark-text .section-tag{color:var(--forest);border-color:rgba(90,107,60,.3);background:rgba(90,107,60,.1)}
 
+/* ══════════ LOADER ══════════ */
+.loader-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(8,9,7,.92);backdrop-filter:blur(18px)}
+.loader-overlay.hidden{display:none}
+
+/* Orbital ambient rings */
+.loader-orbit{position:absolute;border-radius:50%;border:1px solid transparent;pointer-events:none}
+.loader-orbit-1{width:520px;height:520px;border-color:rgba(138,154,91,.08);animation:orbitSpin 18s linear infinite}
+.loader-orbit-2{width:380px;height:380px;border-color:rgba(212,168,83,.06);animation:orbitSpin 12s linear infinite reverse}
+.loader-orbit-3{width:260px;height:260px;border-color:rgba(138,154,91,.05);animation:orbitSpin 8s linear infinite}
+@keyframes orbitSpin{to{transform:rotate(360deg)}}
+
+/* Center content column */
+.loader-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:18px}
+
+/* SVG ring */
+.loader-ring-wrap{position:relative;width:180px;height:180px;flex-shrink:0}
+.loader-ring-svg{width:100%;height:100%;transform:rotate(-90deg)}
+
+/* Circumference of r=68 → 2π×68 ≈ 427.3 */
+.ring-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:6;stroke-linecap:round}
+.ring-fill{fill:none;stroke:url(#ringGrad);stroke-width:6;stroke-linecap:round;stroke-dasharray:427.3;stroke-dashoffset:427.3;transition:stroke-dashoffset .4s ease}
+.ring-glow{fill:none;stroke:rgba(138,154,91,.3);stroke-width:12;stroke-linecap:round;stroke-dasharray:427.3;stroke-dashoffset:427.3;filter:blur(6px);transition:stroke-dashoffset .4s ease}
+
+/* Center inner */
+.loader-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.loader-logo-img{width:52px;height:52px;object-fit:contain;border-radius:14px;filter:drop-shadow(0 0 12px rgba(138,154,91,.5));animation:logoPulse 2s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 10px rgba(138,154,91,.4))}50%{filter:drop-shadow(0 0 22px rgba(138,154,91,.75))}}
+.loader-pct{font-family:var(--font-mono);font-size:.85rem;font-weight:700;color:var(--olive);letter-spacing:1px}
+
+/* Text */
+.loader-title{font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--cream);letter-spacing:.5px;text-shadow:0 0 30px rgba(138,154,91,.2)}
+.loader-sub{font-size:.82rem;color:var(--text3);letter-spacing:.5px;min-height:1.2em;transition:color .3s}
+
+/* Step indicators */
+.loader-steps{display:flex;gap:20px;align-items:flex-start;justify-content:center;margin-top:4px}
+.loader-step-circle{display:flex;flex-direction:column;align-items:center;gap:6px}
+.loader-step-circle span{font-size:.65rem;color:var(--text3);letter-spacing:.5px;text-transform:uppercase}
+
+/* Step dots — larger, neon */
+.step-dot{width:12px;height:12px;border-radius:50%;transition:all .4s ease;flex-shrink:0}
+.step-dot.pending{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1)}
+.step-dot.loading{background:var(--amber);box-shadow:0 0 0 3px rgba(212,168,83,.15),0 0 12px rgba(212,168,83,.6);animation:neonPulse 1s ease-in-out infinite}
+.step-dot.done{background:var(--olive);box-shadow:0 0 0 3px rgba(138,154,91,.15),0 0 10px rgba(138,154,91,.5)}
+.step-dot.error{background:var(--red);box-shadow:0 0 10px rgba(201,100,90,.5)}
+@keyframes neonPulse{0%,100%{box-shadow:0 0 0 2px rgba(212,168,83,.1),0 0 8px rgba(212,168,83,.5)}50%{box-shadow:0 0 0 5px rgba(212,168,83,.2),0 0 18px rgba(212,168,83,.8)}}
+
 /* ══════════ HERO ══════════ */
 .hero-section{min-height:100vh;text-align:center;align-items:center}
 #hero-bg{background-image:url('assets/images/hero-bg.png')}

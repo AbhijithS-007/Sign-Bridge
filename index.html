@@ -344,18 +344,65 @@
 
 <!-- ══════════ LOADER OVERLAY ══════════ -->
 <div class="loader-overlay" id="loader-overlay" role="status" aria-live="polite">
-  <div class="loader-card glass-card">
-    <img src="assets/images/logo.png" alt="SignBridge" class="loader-logo-img"/>
-    <h2 class="loader-title">SignBridge</h2>
-    <p class="loader-sub">Loading AI models…</p>
-    <div class="loader-steps">
-      <div class="loader-step"><div class="step-dot loading" id="dot-mp"></div><span>MediaPipe Hand Landmarker</span></div>
-      <div class="loader-step"><div class="step-dot pending" id="dot-alpha"></div><span>Alphabet Model (MLP)</span></div>
-      <div class="loader-step"><div class="step-dot pending" id="dot-digits"></div><span>Numbers Model (MLP)</span></div>
-      <div class="loader-step"><div class="step-dot pending" id="dot-cam"></div><span>Camera Access</span></div>
+
+  <!-- Ambient orbital rings -->
+  <div class="loader-orbit loader-orbit-1"></div>
+  <div class="loader-orbit loader-orbit-2"></div>
+  <div class="loader-orbit loader-orbit-3"></div>
+
+  <div class="loader-center">
+
+    <!-- Circular SVG progress ring -->
+    <div class="loader-ring-wrap">
+      <svg class="loader-ring-svg" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#8a9a5b"/>
+            <stop offset="50%" stop-color="#d4a853"/>
+            <stop offset="100%" stop-color="#8a9a5b"/>
+          </linearGradient>
+        </defs>
+        <!-- Track ring -->
+        <circle class="ring-track" cx="80" cy="80" r="68"/>
+        <!-- Progress ring (driven by JS via stroke-dashoffset) -->
+        <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="68"/>
+        <!-- Glow duplicate -->
+        <circle class="ring-glow" id="ring-glow" cx="80" cy="80" r="68"/>
+      </svg>
+      <!-- Center content -->
+      <div class="loader-inner">
+        <img src="assets/images/logo.png" alt="SignBridge" class="loader-logo-img"/>
+        <div class="loader-pct" id="loader-pct">0%</div>
+      </div>
     </div>
-    <div class="loader-track"><div class="loader-fill" id="loader-fill" style="width:0%"></div></div>
-    <p class="loader-note">Models in <code>models/alpha_model/</code> and <code>models/numbers_model/</code></p>
+
+    <!-- Title -->
+    <h2 class="loader-title">SignBridge</h2>
+    <p class="loader-sub" id="loader-sub-text">Initializing…</p>
+
+    <!-- Step indicators as neon dots in a row -->
+    <div class="loader-steps">
+      <div class="loader-step-circle" title="MediaPipe Hand Landmarker">
+        <div class="step-dot loading" id="dot-mp"></div>
+        <span>MediaPipe</span>
+      </div>
+      <div class="loader-step-circle" title="Alphabet Model (MLP)">
+        <div class="step-dot pending" id="dot-alpha"></div>
+        <span>Alphabet</span>
+      </div>
+      <div class="loader-step-circle" title="Numbers Model (MLP)">
+        <div class="step-dot pending" id="dot-digits"></div>
+        <span>Numbers</span>
+      </div>
+      <div class="loader-step-circle" title="Camera Access">
+        <div class="step-dot pending" id="dot-cam"></div>
+        <span>Camera</span>
+      </div>
+    </div>
+
+    <!-- Hidden linear fill (still driven by JS, but hidden — SVG ring replaces it visually) -->
+    <div style="display:none"><div class="loader-fill" id="loader-fill" style="width:0%"></div></div>
+
   </div>
 </div>
 

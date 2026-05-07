@@ -147,12 +147,23 @@ function waitForMP() {
   });
 }
 
+const STEP_LABELS = { mp:'Loading MediaPipe…', alpha:'Loading Alphabet Model…', digits:'Loading Numbers Model…', cam:'Starting Camera…' };
 function setStep(id, state) {
   $(`dot-${id}`).className = `step-dot ${state}`;
+  const sub = $("loader-sub-text");
+  if (sub && state === 'loading') sub.textContent = STEP_LABELS[id] || 'Loading…';
+  if (sub && state === 'done' && id === 'cam') sub.textContent = 'All systems ready!';
 }
 
 function setProgress(pct) {
   $("loader-fill").style.width = pct + "%";
+  // Drive SVG circular ring
+  const CIRC = 427.3;
+  const offset = CIRC - (pct / 100) * CIRC;
+  const ring = $("ring-fill"), glow = $("ring-glow"), pctEl = $("loader-pct");
+  if (ring)  ring.style.strokeDashoffset  = offset;
+  if (glow)  glow.style.strokeDashoffset  = offset;
+  if (pctEl) pctEl.textContent = Math.round(pct) + "%";
 }
 
 function showModal() {
