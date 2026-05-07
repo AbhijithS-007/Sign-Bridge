@@ -82,8 +82,8 @@ kbd{font-family:var(--font-mono);font-size:.75em;background:var(--surface);borde
 
 /* Circumference of r=68 → 2π×68 ≈ 427.3 */
 .ring-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:5;stroke-linecap:round}
-.ring-fill{fill:none;stroke:#8a9a5b;stroke-width:5;stroke-linecap:round;stroke-dasharray:427.3;stroke-dashoffset:427.3;transition:stroke-dashoffset .4s ease}
-.ring-glow{fill:none;stroke:rgba(138,154,91,.35);stroke-width:14;stroke-linecap:round;stroke-dasharray:427.3;stroke-dashoffset:427.3;filter:blur(8px);transition:stroke-dashoffset .4s ease}
+.ring-fill{fill:none;stroke:#8a9a5b;stroke-width:5;stroke-linecap:round;stroke-dasharray:427.3;stroke-dashoffset:427.3;transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1)}
+.ring-glow{fill:none;stroke:rgba(138,154,91,.35);stroke-width:14;stroke-linecap:round;stroke-dasharray:427.3;stroke-dashoffset:427.3;filter:blur(8px);transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1)}
 
 /* Sparkle at leading edge of arc */
 .ring-sparkle{fill:#d4a853;opacity:0;transition:opacity .3s}

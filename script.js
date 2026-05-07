@@ -156,7 +156,8 @@ function setStep(id, state) {
 }
 
 function setProgress(pct) {
-  $("loader-fill").style.width = pct + "%";
+  const lf = $("loader-fill");
+  if (lf) lf.style.width = pct + "%";
 
   // Drive SVG circular ring
   const CIRC = 427.3;
@@ -164,9 +165,12 @@ function setProgress(pct) {
   const ring = $("ring-fill"), glow = $("ring-glow"), pctEl = $("loader-pct");
   const sparkle = $("ring-sparkle"), aura = $("ring-aura");
 
-  if (ring)  ring.style.strokeDashoffset  = offset;
-  if (glow)  glow.style.strokeDashoffset  = offset;
+  // SVG attributes must use setAttribute, not .style
+  if (ring)  ring.setAttribute("stroke-dashoffset", offset);
+  if (glow)  glow.setAttribute("stroke-dashoffset", offset);
   if (pctEl) pctEl.textContent = Math.round(pct) + "%";
+
+  console.log("[Loader]", pct + "%", "offset:", offset.toFixed(1));
 
   // Move sparkle dot to leading edge of arc
   if (sparkle) {
