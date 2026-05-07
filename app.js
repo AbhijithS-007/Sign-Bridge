@@ -82,40 +82,64 @@ document.addEventListener("DOMContentLoaded", () => {
   const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   const DIGITS  = '0123456789'.split('');
 
+  // Create shared tooltip element
+  const tooltip = document.createElement('div');
+  tooltip.className = 'sign-tooltip';
+  tooltip.innerHTML = `<div class="sign-tooltip-inner">
+    <img id="tt-img" src="" alt=""/>
+    <div class="sign-tooltip-label" id="tt-label"></div>
+  </div>`;
+  document.body.appendChild(tooltip);
+
+  const ttImg   = tooltip.querySelector('#tt-img');
+  const ttLabel = tooltip.querySelector('#tt-label');
+  let hideTimer = null;
+
+  function positionTooltip(cardEl) {
+    const r = cardEl.getBoundingClientRect();
+    const tw = 180, th = 210; // tooltip approx size
+    let left = r.left + r.width / 2 - tw / 2;
+    let top  = r.top - th - 10;          // prefer above
+    if (top < 8) top = r.bottom + 10;    // flip below if no room
+    left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+    tooltip.style.left = left + 'px';
+    tooltip.style.top  = top  + 'px';
+  }
+
   function buildGrid(containerId, signs) {
     const grid = document.getElementById(containerId);
     if (!grid) return;
+
     signs.forEach(sign => {
       const card = document.createElement('div');
       card.className = 'sign-card';
-      card.title = `ASL sign for "${sign}"`;
 
       const src = `assets/images/signs/${sign.toLowerCase()}.jpg`;
-      const img = document.createElement('img');
-      img.alt = `ASL ${sign}`;
-      img.loading = 'lazy';
 
-      // Show placeholder until image loads; hide placeholder on success
-      const placeholder = document.createElement('div');
-      placeholder.className = 'sign-placeholder';
-      placeholder.innerHTML = `
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M18 11V6.5a2.5 2.5 0 0 0-5 0v3m0 0V6.5a2.5 2.5 0 0 0-5 0V15l-1.5-1.5a2 2 0 0 0-2.83 2.83L7 19a6 6 0 0 0 4.24 1.76H15a5 5 0 0 0 5-5v-4"/>
-        </svg>
-        <span>Run Notebook 4</span>`;
+      // Pre-load image to know if it exists
+      const preload = new Image();
+      preload.onload  = () => card.classList.remove('no-image');
+      preload.onerror = () => card.classList.add('no-image');
+      preload.src = src;
 
-      img.onload  = () => { placeholder.remove(); card.insertBefore(img, label); };
-      img.onerror = () => { /* placeholder stays */ };
-      img.src = src;
-
+      // Letter label only — centered, large
       const label = document.createElement('div');
       label.className = 'sign-label';
       label.textContent = sign;
-
-      card.appendChild(placeholder);
       card.appendChild(label);
 
-      card.addEventListener('click', () => openLightbox(src, sign));
+      // Hover: show tooltip popup
+      card.addEventListener('mouseenter', () => {
+        clearTimeout(hideTimer);
+        ttImg.src   = src;
+        ttLabel.textContent = sign;
+        positionTooltip(card);
+        tooltip.classList.add('visible');
+      });
+      card.addEventListener('mouseleave', () => {
+        hideTimer = setTimeout(() => tooltip.classList.remove('visible'), 80);
+      });
+
       grid.appendChild(card);
     });
   }
@@ -132,15 +156,6 @@ function switchSignTab(tab) {
   });
 }
 
-// ── Lightbox ──
-function openLightbox(src, label) {
-  const lb = document.getElementById('sign-lightbox');
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('lightbox-label').textContent = label;
-  lb.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-}
-function closeLightbox() {
-  document.getElementById('sign-lightbox').classList.add('hidden');
-  document.body.style.overflow = '';
-}
+// Remove old lightbox functions (replaced by hover tooltip)
+function openLightbox(){}
+function closeLightbox(){}

@@ -179,15 +179,95 @@ kbd{font-family:var(--font-mono);font-size:.75em;background:var(--surface);borde
 .signs-panel{display:block}
 .signs-panel.hidden{display:none}
 
-/* Individual sign grid */
-.signs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;margin-bottom:20px}
-.sign-card{background:rgba(255,255,255,.85);border:1px solid rgba(90,107,60,.15);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:var(--transition);box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.sign-card:hover{transform:translateY(-4px) scale(1.04);box-shadow:0 8px 24px rgba(90,107,60,.25);border-color:var(--forest)}
-.sign-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
-.sign-card .sign-placeholder{width:100%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(90,107,60,.06);color:#8a9a6a;gap:4px}
-.sign-card .sign-placeholder svg{opacity:.4}
-.sign-card .sign-placeholder span{font-size:.6rem;opacity:.6}
-.sign-label{text-align:center;padding:8px 4px;font-family:var(--font-mono);font-size:.85rem;font-weight:700;color:#3a4a28;background:rgba(90,107,60,.08);border-top:1px solid rgba(90,107,60,.1)}
+/* ── Individual sign cards ── */
+.signs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;margin-bottom:20px}
+
+.sign-card{
+  position:relative;
+  aspect-ratio:1;
+  border-radius:14px;
+  border:1.5px solid rgba(90,107,60,.2);
+  background:rgba(255,255,255,.88);
+  cursor:pointer;
+  transition:all .25s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 2px 10px rgba(0,0,0,.07);
+  display:flex;align-items:center;justify-content:center;
+  overflow:visible;
+}
+.sign-card:hover{
+  border-color:var(--forest);
+  box-shadow:0 6px 22px rgba(90,107,60,.22);
+  transform:translateY(-3px) scale(1.06);
+  background:#fff;
+  z-index:10;
+}
+
+/* Corner decorations */
+.sign-card::before,.sign-card::after{
+  content:'';position:absolute;width:10px;height:10px;
+  border-color:rgba(90,107,60,.35);border-style:solid;
+  border-radius:2px;transition:border-color .25s;
+}
+.sign-card::before{top:5px;left:5px;border-width:1.5px 0 0 1.5px}
+.sign-card::after{bottom:5px;right:5px;border-width:0 1.5px 1.5px 0}
+.sign-card:hover::before,.sign-card:hover::after{border-color:var(--forest)}
+
+/* Hidden image for hover preview (inside card but overflow:visible) */
+.sign-card .sign-img{display:none}
+
+/* Letter label — big, centered */
+.sign-label{
+  font-family:var(--font-display);
+  font-size:1.55rem;
+  font-weight:800;
+  color:#3a4a28;
+  letter-spacing:.5px;
+  user-select:none;
+  line-height:1;
+}
+
+/* Placeholder state — show small dot instead of text */
+.sign-card.no-image .sign-label{color:rgba(90,107,60,.4)}
+.sign-card.no-image::before,.sign-card.no-image::after{border-color:rgba(90,107,60,.15)}
+
+/* ── Hover popup tooltip ── */
+.sign-tooltip{
+  position:fixed;
+  z-index:3000;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(6px) scale(.95);
+  transition:opacity .18s ease, transform .18s ease;
+  width:180px;
+}
+.sign-tooltip.visible{
+  opacity:1;
+  transform:translateY(0) scale(1);
+}
+.sign-tooltip-inner{
+  background:#fff;
+  border:2px solid var(--forest);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,.22), 0 0 0 4px rgba(90,107,60,.08);
+}
+.sign-tooltip-inner img{
+  width:100%;
+  aspect-ratio:1;
+  object-fit:cover;
+  display:block;
+}
+.sign-tooltip-label{
+  text-align:center;
+  padding:7px 4px;
+  font-family:var(--font-display);
+  font-size:1rem;
+  font-weight:800;
+  color:#3a4a28;
+  background:rgba(90,107,60,.07);
+  border-top:1px solid rgba(90,107,60,.12);
+  letter-spacing:1px;
+}
 
 /* Tips card */
 .tips-card{padding:36px;max-width:600px}
@@ -196,14 +276,6 @@ kbd{font-family:var(--font-mono);font-size:.75em;background:var(--surface);borde
 
 /* Dark tip variant for light backgrounds */
 .card-tip.dark{font-size:.82rem;color:#4a5a2a;background:rgba(90,107,60,.1);border:1px solid rgba(90,107,60,.2);border-radius:var(--radius-sm);padding:12px 16px;margin-top:4px}
-
-/* Lightbox */
-.sign-lightbox{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center}
-.sign-lightbox.hidden{display:none}
-.lightbox-inner{position:relative;text-align:center;max-width:min(480px,90vw)}
-.lightbox-inner img{width:100%;border-radius:var(--radius-lg);box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.lightbox-label{font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--cream);margin-top:16px;letter-spacing:2px}
-.lightbox-close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 /* ══════════ ABOUT ══════════ */
 #about-bg{background-image:url('assets/images/about-bg.png')}
