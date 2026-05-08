@@ -155,40 +155,65 @@ function setStep(id, state) {
   if (sub && state === 'done' && id === 'cam') sub.textContent = 'All systems ready!';
 }
 
+let _ringCurrent = 0;   // current animated percentage
+let _ringTarget  = 0;
+let _ringAnimId  = null;
+
 function setProgress(pct) {
   const lf = $("loader-fill");
   if (lf) lf.style.width = pct + "%";
 
-  // Drive SVG circular ring
+  _ringTarget = pct;
+  if (!_ringAnimId) _animateRing();
+}
+
+function _animateRing() {
   const CIRC = 427.3;
-  const offset = CIRC - (pct / 100) * CIRC;
-  const ring = $("ring-fill"), glow = $("ring-glow"), pctEl = $("loader-pct");
-  const sparkle = $("ring-sparkle"), aura = $("ring-aura");
+  const speed = 1.8; // percentage points per frame (~60fps → smooth)
 
-  // SVG attributes must use setAttribute, not .style
-  if (ring)  ring.setAttribute("stroke-dashoffset", offset);
-  if (glow)  glow.setAttribute("stroke-dashoffset", offset);
-  if (pctEl) pctEl.textContent = Math.round(pct) + "%";
+  // Ease toward target
+  const diff = _ringTarget - _ringCurrent;
+  if (Math.abs(diff) < 0.3) {
+    _ringCurrent = _ringTarget;
+  } else {
+    _ringCurrent += diff * 0.08 + Math.sign(diff) * speed;
+    // Don't overshoot
+    if ((diff > 0 && _ringCurrent > _ringTarget) || (diff < 0 && _ringCurrent < _ringTarget)) {
+      _ringCurrent = _ringTarget;
+    }
+  }
 
-  console.log("[Loader]", pct + "%", "offset:", offset.toFixed(1));
+  const offset = CIRC - (_ringCurrent / 100) * CIRC;
+  const ring    = $("ring-fill");
+  const glow    = $("ring-glow");
+  const pctEl   = $("loader-pct");
+  const sparkle = $("ring-sparkle");
+  const aura    = $("ring-aura");
 
-  // Move sparkle dot to leading edge of arc
+  if (ring) ring.style.strokeDashoffset = offset;
+  if (glow) glow.style.strokeDashoffset = offset;
+  if (pctEl) pctEl.textContent = Math.round(_ringCurrent) + "%";
+
+  // Sparkle at leading edge
   if (sparkle) {
-    if (pct > 0 && pct < 100) {
+    if (_ringCurrent > 0.5 && _ringCurrent < 99.5) {
       sparkle.classList.add('active');
-      const angle = (pct / 100) * 2 * Math.PI - Math.PI / 2; // starts at top
-      const cx = 80 + 68 * Math.cos(angle);
-      const cy = 80 + 68 * Math.sin(angle);
-      sparkle.setAttribute('cx', cx);
-      sparkle.setAttribute('cy', cy);
-    } else if (pct >= 100) {
+      const angle = (_ringCurrent / 100) * 2 * Math.PI - Math.PI / 2;
+      sparkle.setAttribute('cx', 80 + 68 * Math.cos(angle));
+      sparkle.setAttribute('cy', 80 + 68 * Math.sin(angle));
+    } else {
       sparkle.classList.remove('active');
     }
   }
 
-  // Aura appears when fully loaded
-  if (aura && pct >= 100) {
-    aura.classList.add('active');
+  // Aura at 100%
+  if (aura && _ringCurrent >= 99.5) aura.classList.add('active');
+
+  // Keep animating until we reach target
+  if (Math.abs(_ringCurrent - _ringTarget) > 0.2) {
+    _ringAnimId = requestAnimationFrame(_animateRing);
+  } else {
+    _ringAnimId = null;
   }
 }
 
