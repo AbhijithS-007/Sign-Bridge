@@ -384,12 +384,14 @@
           </defs>
           <!-- Track ring -->
           <circle class="ring-track" cx="80" cy="80" r="68"/>
-          <!-- Progress ring -->
-          <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="68" stroke="#8a9a5b"/>
+          <!-- Progress ring: dash values as SVG attrs (JS uses setAttribute to update) -->
+          <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="68"
+            stroke-dasharray="427.3" stroke-dashoffset="427.3"/>
           <!-- Glow layer -->
-          <circle class="ring-glow" id="ring-glow" cx="80" cy="80" r="68"/>
-          <!-- Sparkle dot at leading edge -->
-          <circle class="ring-sparkle" id="ring-sparkle" cx="80" cy="12" r="5" filter="url(#glitter)"/>
+          <circle class="ring-glow" id="ring-glow" cx="80" cy="80" r="68"
+            stroke-dasharray="427.3" stroke-dashoffset="427.3"/>
+          <!-- Sparkle: cx=148,cy=80 = SVG 3 o'clock = visual 12 o'clock after rotate(-90deg) -->
+          <circle class="ring-sparkle" id="ring-sparkle" cx="148" cy="80" r="5" filter="url(#glitter)"/>
         </svg>
 
         <!-- Center content -->

@@ -155,59 +155,52 @@ function setStep(id, state) {
   if (sub && state === 'done' && id === 'cam') sub.textContent = 'All systems ready!';
 }
 
-let _ringCurrent = 0;   // current animated percentage
+let _ringCurrent = 0;
 let _ringTarget  = 0;
 let _ringAnimId  = null;
 
 function setProgress(pct) {
   const lf = $("loader-fill");
   if (lf) lf.style.width = pct + "%";
-
   _ringTarget = pct;
-  if (!_ringAnimId) _animateRing();
+  if (!_ringAnimId) {
+    _ringAnimId = requestAnimationFrame(_animateRing);
+  }
 }
 
 function _animateRing() {
   const CIRC = 427.3;
 
-  // Smooth lerp — move 12% of remaining distance each frame
-  const diff = _ringTarget - _ringCurrent;
-  if (Math.abs(diff) < 0.15) {
-    _ringCurrent = _ringTarget;
-  } else {
-    _ringCurrent += diff * 0.12;
-  }
+  // Pure lerp: 10% of gap each frame → smooth exponential ease-out, no jumps
+  _ringCurrent += (_ringTarget - _ringCurrent) * 0.10;
+  if (Math.abs(_ringTarget - _ringCurrent) < 0.05) _ringCurrent = _ringTarget;
 
-  const offset = CIRC - (_ringCurrent / 100) * CIRC;
+  const offset  = CIRC * (1 - _ringCurrent / 100);
   const ring    = $("ring-fill");
   const glow    = $("ring-glow");
   const pctEl   = $("loader-pct");
   const sparkle = $("ring-sparkle");
   const aura    = $("ring-aura");
 
-  if (ring) ring.style.strokeDashoffset = offset;
-  if (glow) glow.style.strokeDashoffset = offset;
+  // Use setAttribute — reliable for SVG presentation attributes
+  // (CSS classes no longer set stroke-dasharray/offset, so no CSS vs attr conflict)
+  if (ring)  ring.setAttribute("stroke-dashoffset",  offset.toFixed(2));
+  if (glow)  glow.setAttribute("stroke-dashoffset",  offset.toFixed(2));
   if (pctEl) pctEl.textContent = Math.round(_ringCurrent) + "%";
 
-  // Sparkle at leading edge
-  // NOTE: No -PI/2 here — the CSS rotate(-90deg) on the SVG already
-  // moves the 0° start point (3 o'clock) to the top (12 o'clock)
+  // Sparkle position:
+  // SVG has CSS rotate(-90deg) → SVG 3 o'clock (angle=0) becomes visual 12 o'clock
+  // So angle = pct/100 * 2π gives correct clockwise position from top
   if (sparkle) {
-    if (_ringCurrent > 0.5 && _ringCurrent < 99.5) {
-      sparkle.classList.add('active');
-      const angle = (_ringCurrent / 100) * 2 * Math.PI;
-      sparkle.setAttribute('cx', 80 + 68 * Math.cos(angle));
-      sparkle.setAttribute('cy', 80 + 68 * Math.sin(angle));
-    } else {
-      sparkle.classList.remove('active');
-    }
+    const angle = (_ringCurrent / 100) * 2 * Math.PI;
+    sparkle.setAttribute("cx", (80 + 68 * Math.cos(angle)).toFixed(2));
+    sparkle.setAttribute("cy", (80 + 68 * Math.sin(angle)).toFixed(2));
+    sparkle.classList.toggle("active", _ringCurrent > 0.5 && _ringCurrent < 99.5);
   }
 
-  // Aura at 100%
-  if (aura && _ringCurrent >= 99.5) aura.classList.add('active');
+  if (aura && _ringCurrent >= 99.5) aura.classList.add("active");
 
-  // Keep animating until settled
-  if (Math.abs(_ringCurrent - _ringTarget) > 0.1) {
+  if (Math.abs(_ringTarget - _ringCurrent) > 0.05) {
     _ringAnimId = requestAnimationFrame(_animateRing);
   } else {
     _ringAnimId = null;

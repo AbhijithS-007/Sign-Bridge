@@ -76,14 +76,14 @@ kbd{font-family:var(--font-mono);font-size:.75em;background:var(--surface);borde
 .loader-ring-svg{width:100%;height:100%;transform:rotate(-90deg)}
 
 /* Aura ring - positioned over the ring-wrap, hidden until complete */
-.ring-aura{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:210px;height:210px;border-radius:50%;opacity:0;pointer-events:none;transition:opacity .5s;z-index:-1}
+.ring-aura{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border-radius:50%;opacity:0;pointer-events:none;transition:opacity .6s;z-index:-1}
 .ring-aura.active{opacity:1;animation:auraPulse 2s ease-in-out infinite}
-@keyframes auraPulse{0%,100%{box-shadow:0 0 20px 4px rgba(138,154,91,.2),0 0 60px 12px rgba(138,154,91,.1)}50%{box-shadow:0 0 40px 10px rgba(138,154,91,.4),0 0 80px 24px rgba(138,154,91,.15)}}
+@keyframes auraPulse{0%,100%{box-shadow:0 0 0 0 rgba(138,154,91,0),0 0 30px 6px rgba(138,154,91,.2)}50%{box-shadow:0 0 0 14px rgba(138,154,91,0),0 0 60px 18px rgba(138,154,91,.45)}}
 
-/* Circumference of r=68 → 2π×68 ≈ 427.3 */
-.ring-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:5}
-.ring-fill{fill:none;stroke:#a3b56e;stroke-width:7;stroke-linecap:round;stroke-dasharray:427.3;stroke-dashoffset:427.3}
-.ring-glow{fill:none;stroke:rgba(138,154,91,.45);stroke-width:18;stroke-linecap:round;stroke-dasharray:427.3;stroke-dashoffset:427.3;filter:blur(10px)}
+/* ring-fill/glow: stroke-dasharray & stroke-dashoffset set as SVG attrs in HTML; JS uses setAttribute */
+.ring-track{fill:none;stroke:rgba(255,255,255,.07);stroke-width:5}
+.ring-fill{fill:none;stroke:#b8cc7a;stroke-width:7;stroke-linecap:round}
+.ring-glow{fill:none;stroke:rgba(163,181,110,.5);stroke-width:20;stroke-linecap:round;filter:blur(10px)}
 
 /* Sparkle at leading edge of arc */
 .ring-sparkle{fill:#d4a853;opacity:0;transition:opacity .3s}
