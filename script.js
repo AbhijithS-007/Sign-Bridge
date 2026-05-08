@@ -169,18 +169,13 @@ function setProgress(pct) {
 
 function _animateRing() {
   const CIRC = 427.3;
-  const speed = 1.8; // percentage points per frame (~60fps → smooth)
 
-  // Ease toward target
+  // Smooth lerp — move 12% of remaining distance each frame
   const diff = _ringTarget - _ringCurrent;
-  if (Math.abs(diff) < 0.3) {
+  if (Math.abs(diff) < 0.15) {
     _ringCurrent = _ringTarget;
   } else {
-    _ringCurrent += diff * 0.08 + Math.sign(diff) * speed;
-    // Don't overshoot
-    if ((diff > 0 && _ringCurrent > _ringTarget) || (diff < 0 && _ringCurrent < _ringTarget)) {
-      _ringCurrent = _ringTarget;
-    }
+    _ringCurrent += diff * 0.12;
   }
 
   const offset = CIRC - (_ringCurrent / 100) * CIRC;
@@ -195,10 +190,12 @@ function _animateRing() {
   if (pctEl) pctEl.textContent = Math.round(_ringCurrent) + "%";
 
   // Sparkle at leading edge
+  // NOTE: No -PI/2 here — the CSS rotate(-90deg) on the SVG already
+  // moves the 0° start point (3 o'clock) to the top (12 o'clock)
   if (sparkle) {
     if (_ringCurrent > 0.5 && _ringCurrent < 99.5) {
       sparkle.classList.add('active');
-      const angle = (_ringCurrent / 100) * 2 * Math.PI - Math.PI / 2;
+      const angle = (_ringCurrent / 100) * 2 * Math.PI;
       sparkle.setAttribute('cx', 80 + 68 * Math.cos(angle));
       sparkle.setAttribute('cy', 80 + 68 * Math.sin(angle));
     } else {
@@ -209,8 +206,8 @@ function _animateRing() {
   // Aura at 100%
   if (aura && _ringCurrent >= 99.5) aura.classList.add('active');
 
-  // Keep animating until we reach target
-  if (Math.abs(_ringCurrent - _ringTarget) > 0.2) {
+  // Keep animating until settled
+  if (Math.abs(_ringCurrent - _ringTarget) > 0.1) {
     _ringAnimId = requestAnimationFrame(_animateRing);
   } else {
     _ringAnimId = null;
