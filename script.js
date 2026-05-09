@@ -67,17 +67,14 @@ async function loadAll() {
   setStep("mp", "loading");
   setProgress(5);
 
-  // Wait for MediaPipe ESM to be ready
-  await waitForMP();
-
   try {
-    const { FilesetResolver, HandLandmarker } = window._mpImport;
+    const { FilesetResolver, HandLandmarker } = await import("./vendor/vision_bundle.mjs");
     const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
+      "vendor"
     );
     handLandmarker = await HandLandmarker.createFromOptions(vision, {
       baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+        modelAssetPath: "models/mediapipe/hand_landmarker.task",
         delegate: "GPU"
       },
       runningMode: "VIDEO",
@@ -140,12 +137,7 @@ async function loadAll() {
   }, 750);
 }
 
-function waitForMP() {
-  return new Promise(resolve => {
-    const check = () => window._mpImport ? resolve() : setTimeout(check, 100);
-    check();
-  });
-}
+
 
 const STEP_LABELS = { mp:'Loading MediaPipe…', alpha:'Loading Alphabet Model…', digits:'Loading Numbers Model…', cam:'Starting Camera…' };
 function setStep(id, state) {

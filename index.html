@@ -5,15 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>SignBridge — Learn &amp; Translate Sign Language | ASL Recognition</title>
   <meta name="description" content="SignBridge is a real-time ASL sign language translator powered by AI. Learn, practice, and communicate using American Sign Language right in your browser."/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <!-- Disabled Google Fonts for offline support; system fonts will be used as a fallback -->
+  <!-- <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-  <script type="module">
-    import { FilesetResolver, HandLandmarker }
-      from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/vision_bundle.mjs";
-    window._mpImport = { FilesetResolver, HandLandmarker };
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/> -->
+  <script src="vendor/tf.min.js"></script>
+
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
