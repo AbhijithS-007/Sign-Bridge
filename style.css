@@ -398,6 +398,13 @@ kbd{font-family:var(--font-mono);font-size:.75em;background:var(--surface);borde
 .modal-paths code{font-family:var(--font-mono);font-size:.73rem;background:var(--bg2);border:1px solid var(--glass-border);border-radius:6px;padding:6px 10px;color:var(--olive)}
 .modal-close{width:100%;justify-content:center;margin-top:8px;padding:12px}
 
+/* ══════════ WORD MODE ══════════ */
+.word-record-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:8}
+.word-record-ring{width:80px;height:80px;animation:wordPulse 1.5s ease-in-out infinite}
+@keyframes wordPulse{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.08);opacity:1}}
+.word-ring-fill{transition:stroke-dashoffset .15s linear}
+.word-record-label{margin-top:8px;font-size:.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#d4a853;text-shadow:0 0 12px rgba(212,168,83,.5)}
+
 /* ══════════ RESPONSIVE ══════════ */
 .hidden{display:none!important}
 @media(max-width:700px){

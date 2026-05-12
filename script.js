@@ -16,21 +16,35 @@ const LANDMARK_COUNT    = 21;
 const COORDS_PER_LM     = 3;    // x, y, z
 const HAND_FEATURE_SIZE = LANDMARK_COUNT * COORDS_PER_LM; // 63
 
+// Word mode constants
+const WORD_SEQ_LENGTH   = 32;   // frames to buffer for LSTM
+const WORD_NUM_FEATURES = 126;  // both hands: 21 landmarks × 3 coords × 2 = 126
+const WORD_COOLDOWN_MS  = 1500; // cooldown between word predictions
+
 // ─────────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────────
 let handLandmarker   = null;
 let alphaModel       = null;
 let digitsModel      = null;
-let modelsLoaded     = { mp: false, alpha: false, digits: false };
+let wordsModel       = null;
+let wordClasses      = [];      // loaded from word_classes.json
+let modelsLoaded     = { mp: false, alpha: false, digits: false, words: false };
 let demoMode         = false;
 
-let currentMode      = "alpha"; // "alpha" | "digits"
+let currentMode      = "alpha"; // "alpha" | "digits" | "words"
 let lastAlphaLetter  = null;
 let alphaConfirmCount = 0;
 let lastAccepted     = null;    // prevent same sign repeating
 let totalRecognized  = 0;
 let cameraPaused     = false;
+
+// Word mode state
+let wordFrameBuffer  = [];      // array of frame landmark arrays
+let isRecordingSign  = false;
+let wordCooldownUntil = 0;      // timestamp when cooldown ends
+let handMissingFrames = 0;      // count frames without hand to detect sign end
+const HAND_MISSING_THRESHOLD = 8; // frames without hand before triggering predict
 
 let webcamStream     = null;
 let animFrameId      = null;
@@ -67,14 +81,17 @@ async function loadAll() {
   setStep("mp", "loading");
   setProgress(5);
 
+  // Wait for MediaPipe ESM to be ready
+  await waitForMP();
+
   try {
-    const { FilesetResolver, HandLandmarker } = await import("./vendor/vision_bundle.mjs");
+    const { FilesetResolver, HandLandmarker } = window._mpImport;
     const vision = await FilesetResolver.forVisionTasks(
-      "vendor"
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
     );
     handLandmarker = await HandLandmarker.createFromOptions(vision, {
       baseOptions: {
-        modelAssetPath: "models/mediapipe/hand_landmarker.task",
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
         delegate: "GPU"
       },
       runningMode: "VIDEO",
@@ -102,7 +119,7 @@ async function loadAll() {
     setStep("alpha", "error");
     demoMode = true;
   }
-  setProgress(50);
+  setProgress(45);
 
   // Digits model
   setStep("digits", "loading");
@@ -118,7 +135,27 @@ async function loadAll() {
     setStep("digits", "error");
     demoMode = true;
   }
-  setProgress(75);
+  setProgress(60);
+
+  // Words model (LSTM)
+  setStep("words", "loading");
+  try {
+    wordsModel = await tf.loadGraphModel("models/words_model/model.json");
+    // Load word class labels
+    const resp = await fetch("models/words_model/word_classes.json");
+    wordClasses = await resp.json();
+    // Warm up with dummy input
+    const dummyW = tf.zeros([1, WORD_SEQ_LENGTH, WORD_NUM_FEATURES]);
+    wordsModel.predict(dummyW).dispose();
+    dummyW.dispose();
+    setStep("words", "done");
+    modelsLoaded.words = true;
+    console.log(`✅ Words model loaded: ${wordClasses.length} classes`);
+  } catch (e) {
+    console.warn("Words model not found:", e);
+    setStep("words", "error");
+  }
+  setProgress(80);
 
   if (demoMode) showModal();
 
@@ -137,9 +174,14 @@ async function loadAll() {
   }, 750);
 }
 
+function waitForMP() {
+  return new Promise(resolve => {
+    const check = () => window._mpImport ? resolve() : setTimeout(check, 100);
+    check();
+  });
+}
 
-
-const STEP_LABELS = { mp:'Loading MediaPipe…', alpha:'Loading Alphabet Model…', digits:'Loading Numbers Model…', cam:'Starting Camera…' };
+const STEP_LABELS = { mp:'Loading MediaPipe…', alpha:'Loading Alphabet Model…', digits:'Loading Numbers Model…', words:'Loading Words Model…', cam:'Starting Camera…' };
 function setStep(id, state) {
   $(`dot-${id}`).className = `step-dot ${state}`;
   const sub = $("loader-sub-text");
@@ -272,19 +314,34 @@ function processFrame(timestamp) {
 
   if (hands.length === 0) {
     setPredBadge("—", 0);
-    // Hand removed — reset progress bar and allow re-detection
-    lastAccepted = null;
-    lastAlphaLetter = null;
-    alphaConfirmCount = 0;
-    $("cooldown-fill").style.width = "0%";
-    $("cooldown-count").textContent = "Ready";
+
+    if (currentMode === "words") {
+      // In word mode: hand disappearing may signal end of sign
+      if (isRecordingSign) {
+        handMissingFrames++;
+        if (handMissingFrames >= HAND_MISSING_THRESHOLD) {
+          // Hand gone long enough → predict the buffered sign
+          runWordPrediction(timestamp);
+          resetWordBuffer();
+        }
+      }
+    } else {
+      // Letter/Number mode: reset
+      lastAccepted = null;
+      lastAlphaLetter = null;
+      alphaConfirmCount = 0;
+      $("cooldown-fill").style.width = "0%";
+      $("cooldown-count").textContent = "Ready";
+    }
     return;
   }
 
   // Extract features (both hands, zero-padded if only 1)
   const features = extractFeatures(hands);
 
-  if (currentMode === "alpha") {
+  if (currentMode === "words") {
+    runWordMode(features, timestamp);
+  } else if (currentMode === "alpha") {
     runSignMode(features, alphaModel, modelsLoaded.alpha, ALPHA_CLASSES);
   } else {
     runSignMode(features, digitsModel, modelsLoaded.digits, DIGITS_CLASSES);
@@ -370,6 +427,107 @@ function handlePrediction(probs, classes) {
     $("cooldown-fill").style.width = "0%";
     $("cooldown-count").textContent = "Ready";
   }
+}
+
+// ─────────────────────────────────────────────
+// WORD MODE (LSTM temporal inference)
+// ─────────────────────────────────────────────
+function runWordMode(features, timestamp) {
+  // Check cooldown
+  if (timestamp < wordCooldownUntil) {
+    $("word-record-label").textContent = "Cooldown...";
+    return;
+  }
+
+  // Hand is present → start/continue recording
+  handMissingFrames = 0;
+
+  if (!isRecordingSign) {
+    isRecordingSign = true;
+    wordFrameBuffer = [];
+    $("word-record-overlay").classList.remove("hidden");
+    $("word-record-label").textContent = "Recording...";
+  }
+
+  // Buffer this frame (use full 126 features = both hands)
+  wordFrameBuffer.push(features.slice(0, WORD_NUM_FEATURES));
+
+  // Update recording progress ring
+  const ringProgress = Math.min(wordFrameBuffer.length / WORD_SEQ_LENGTH, 1.0);
+  const ringCirc = 276.5;
+  const ringEl = $("word-ring-fill");
+  if (ringEl) ringEl.setAttribute("stroke-dashoffset", ringCirc * (1 - ringProgress));
+
+  // Update cooldown UI to show frame count
+  $("cooldown-fill").style.width = (ringProgress * 100) + "%";
+  $("cooldown-count").textContent = `${wordFrameBuffer.length}/${WORD_SEQ_LENGTH} frames`;
+
+  // Auto-predict when buffer is full
+  if (wordFrameBuffer.length >= WORD_SEQ_LENGTH * 2) {
+    // Buffer is way too long — predict with what we have
+    runWordPrediction(timestamp);
+    resetWordBuffer();
+  }
+}
+
+function runWordPrediction(timestamp) {
+  if (!modelsLoaded.words || !wordsModel || wordFrameBuffer.length < 5) {
+    // Not enough frames or no model
+    resetWordBuffer();
+    return;
+  }
+
+  // Pad or truncate to WORD_SEQ_LENGTH
+  let sequence = [...wordFrameBuffer];
+  if (sequence.length > WORD_SEQ_LENGTH) {
+    // Center-crop
+    const start = Math.floor((sequence.length - WORD_SEQ_LENGTH) / 2);
+    sequence = sequence.slice(start, start + WORD_SEQ_LENGTH);
+  } else {
+    // Pad with zeros
+    while (sequence.length < WORD_SEQ_LENGTH) {
+      sequence.push(new Array(WORD_NUM_FEATURES).fill(0));
+    }
+  }
+
+  // Create tensor [1, SEQ_LENGTH, NUM_FEATURES]
+  tf.tidy(() => {
+    const input = tf.tensor3d([sequence], [1, WORD_SEQ_LENGTH, WORD_NUM_FEATURES]);
+    const output = wordsModel.predict(input);
+    const probs = output.dataSync();
+
+    // Find top prediction
+    let maxIdx = 0, maxProb = 0;
+    for (let i = 0; i < probs.length; i++) {
+      if (probs[i] > maxProb) { maxProb = probs[i]; maxIdx = i; }
+    }
+
+    const word = wordClasses[maxIdx] || `class_${maxIdx}`;
+    console.log(`🤟 Word prediction: "${word}" (${(maxProb * 100).toFixed(1)}%)`);
+
+    setPredBadge(word, maxProb);
+    $("stat-conf-val").textContent = pct(maxProb);
+
+    if (maxProb >= 0.5) {
+      // Add word to output
+      addLetterChar(word);
+      totalRecognized++;
+      $("stat-total-val").textContent = totalRecognized;
+    }
+  });
+
+  // Start cooldown
+  wordCooldownUntil = timestamp + WORD_COOLDOWN_MS;
+}
+
+function resetWordBuffer() {
+  wordFrameBuffer = [];
+  isRecordingSign = false;
+  handMissingFrames = 0;
+  $("word-record-overlay").classList.add("hidden");
+  $("word-ring-fill")?.setAttribute("stroke-dashoffset", "276.5");
+  $("cooldown-fill").style.width = "0%";
+  $("cooldown-count").textContent = "Ready";
 }
 
 // ─────────────────────────────────────────────
@@ -487,6 +645,23 @@ function buildLetterGrid() {
 function rebuildGrid() {
   const grid = $("letter-grid");
   grid.innerHTML = "";
+
+  if (currentMode === "words") {
+    // In words mode, show available word count instead of letter tiles
+    if (wordClasses.length > 0) {
+      const info = document.createElement("div");
+      info.style.cssText = "text-align:center;padding:16px;color:var(--text3);font-size:.8rem;";
+      info.innerHTML = `<span style="font-size:1.5rem;display:block;margin-bottom:8px">🤟</span>${wordClasses.length} word signs available<br><small style="opacity:.6">Show hand to camera and perform a sign</small>`;
+      grid.appendChild(info);
+    } else {
+      const info = document.createElement("div");
+      info.style.cssText = "text-align:center;padding:16px;color:var(--text3);font-size:.8rem;";
+      info.innerHTML = `<span style="font-size:1.5rem;display:block;margin-bottom:8px">⚠️</span>Words model not loaded`;
+      grid.appendChild(info);
+    }
+    return;
+  }
+
   const classes = currentMode === "alpha" ? ALPHA_CLASSES : DIGITS_CLASSES;
   classes.forEach(l => {
     const tile = document.createElement("div");
@@ -519,22 +694,30 @@ function switchMode(mode) {
   lastAlphaLetter = null;
   alphaConfirmCount = 0;
   lastAccepted = null;
+  resetWordBuffer();
 
   $("btn-mode-alpha").classList.toggle("active", mode === "alpha");
   $("btn-mode-digits").classList.toggle("active", mode === "digits");
+  $("btn-mode-words").classList.toggle("active", mode === "words");
   $("btn-mode-alpha").setAttribute("aria-selected", mode === "alpha");
   $("btn-mode-digits").setAttribute("aria-selected", mode === "digits");
+  $("btn-mode-words").setAttribute("aria-selected", mode === "words");
 
   if (mode === "alpha") {
     $("mode-name").textContent  = "Alphabet A–Z Mode";
     $("mode-desc").textContent  = "Single frame → MLP → Letter classification";
     $("mode-badge").textContent = "MLP";
     $("grid-label").textContent = "ASL Alphabet Reference";
-  } else {
+  } else if (mode === "digits") {
     $("mode-name").textContent  = "Numbers 0–9 Mode";
     $("mode-desc").textContent  = "Single frame → MLP → Digit classification";
     $("mode-badge").textContent = "MLP";
     $("grid-label").textContent = "ASL Digits Reference";
+  } else {
+    $("mode-name").textContent  = "Words Mode 🤟";
+    $("mode-desc").textContent  = `${WORD_SEQ_LENGTH} frames → LSTM → Word classification`;
+    $("mode-badge").textContent = "LSTM";
+    $("grid-label").textContent = `ASL Word Signs (${wordClasses.length})`;
   }
 
   rebuildGrid();
@@ -549,6 +732,7 @@ function bindUI() {
   // Mode toggle
   $("btn-mode-alpha").addEventListener("click", () => switchMode("alpha"));
   $("btn-mode-digits").addEventListener("click", () => switchMode("digits"));
+  $("btn-mode-words").addEventListener("click", () => switchMode("words"));
 
   // Reset
   $("btn-reset-alpha").addEventListener("click", () => {
@@ -638,7 +822,9 @@ function bindUI() {
     }
     if (e.key === "m" || e.key === "M") {
       e.preventDefault();
-      switchMode(currentMode === "alpha" ? "digits" : "alpha");
+      const modes = ["alpha", "digits", "words"];
+      const next = modes[(modes.indexOf(currentMode) + 1) % modes.length];
+      switchMode(next);
     }
   });
 }
