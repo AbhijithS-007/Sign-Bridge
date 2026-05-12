@@ -32,16 +32,55 @@ else:
 
 # %% [markdown]
 # ## 2. Download Dataset from Kaggle
+#
+# **⚠️ IMPORTANT:** Before running the cell below, you MUST accept the competition rules:
+# 1. Go to https://www.kaggle.com/competitions/asl-signs/rules
+# 2. Click "I Understand and Accept"
+# 3. Then run the cell below
 
 # %%
 # Download the Google ISLR dataset
-!kaggle competitions download -c asl-signs -p /content/asl-signs --force
+import subprocess, os
+
+# Accept rules via API (may still need web acceptance)
+subprocess.run(["kaggle", "competitions", "list", "-s", "asl-signs"], capture_output=True)
+
+print("⬇️ Downloading dataset (this may take 2-5 minutes)...")
+result = subprocess.run(
+    ["kaggle", "competitions", "download", "-c", "asl-signs", "-p", "/content/asl-signs"],
+    capture_output=True, text=True
+)
+print(result.stdout)
+if result.returncode != 0:
+    print("❌ Download failed! Error:", result.stderr)
+    print("\n👉 Make sure you accepted the rules at:")
+    print("   https://www.kaggle.com/competitions/asl-signs/rules")
+else:
+    print("✅ Download complete!")
 
 # %%
-# Unzip
-!cd /content/asl-signs && unzip -qo asl-signs.zip
-print("✅ Dataset extracted!")
-!ls /content/asl-signs/
+# Extract the dataset
+import zipfile, glob
+
+zip_files = glob.glob("/content/asl-signs/*.zip")
+if zip_files:
+    print(f"📦 Extracting {zip_files[0]}...")
+    with zipfile.ZipFile(zip_files[0], 'r') as z:
+        z.extractall("/content/asl-signs/")
+    print("✅ Dataset extracted!")
+else:
+    print("❌ No zip file found in /content/asl-signs/")
+    print("   Contents:", os.listdir("/content/asl-signs/") if os.path.exists("/content/asl-signs/") else "directory missing")
+
+# Verify key files exist
+for f in ["train.csv", "sign_to_prediction_index_map.json"]:
+    path = f"/content/asl-signs/{f}"
+    if os.path.exists(path):
+        print(f"  ✅ {f}")
+    else:
+        print(f"  ❌ {f} — MISSING!")
+
+!ls /content/asl-signs/ | head -20
 
 # %% [markdown]
 # ## 3. Load & Explore Data
